@@ -1,33 +1,42 @@
 
-venv:
-ifndef VIRTUAL_ENV
-	$(error Please install and activate a virtualenv before using the init or dev targets)
-endif
+help:
+	@echo "  dev         install all dev dependencies (virtualenv is assumed)"
+	@echo "  clean       remove unwanted stuff"
+	@echo "  lint        check style with flake8"
+	@echo "  test        run tests"
+	@echo "  coverage    run tests with code coverage"
 
-init:
-	pip install wheel
-	pip install nose
-	pip install check-manifest
-	pip install -r requirements.txt
+dev:
+	pip install -r requirements-test.txt
+	pip install --editable .
 
-dev: init
-	pip install --upgrade -e .
-
-test:
-	nosetests --verbosity=2 tests 
-
-upload: check
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+info:
+	python --version
+	pyenv --version
+	pip --version
 
 clean:
 	python setup.py clean
 
-distclean: clean dist
+lint:
+	flake8 doukan > violations.flake8.txt
 
-dist: check
-	python setup.py sdist
+test: lint
+	python setup.py test
 
-check:
+coverage: clean
+	coverage run --source=doukan setup.py test --addopts "--ignore=venv"
+	coverage html
+	coverage report
+
+check: clean lint
 	check-manifest
 	python setup.py check
+
+build: check
+	python setup.py sdist
+	python setup.py bdist_wheel
+
+upload: check
+	python setup.py sdist upload
+	python setup.py bdist_wheel upload
